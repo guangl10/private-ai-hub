@@ -16,7 +16,6 @@
 
         .user-grid { display: flex; gap: 30px; }
         
-        /* 磨砂玻璃卡片 */
         .user-card {
             width: 140px; height: 160px; border-radius: 24px;
             background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(25px) saturate(180%);
@@ -28,28 +27,29 @@
         }
         
         .user-card:hover { transform: translateY(-10px) scale(1.05); background: rgba(255, 255, 255, 0.2); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4); border-color: rgba(255, 255, 255, 0.3); }
-        .avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #007AFF, #5AC8FA); margin-bottom: 15px; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; }
+        .avatar { width: 60px; height: 60px; border-radius: 50%; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; font-size: 26px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         .name { font-size: 16px; font-weight: 500; }
         
-        /* 分别给B和C不同的渐变色 */
-        #card-b .avatar { background: linear-gradient(135deg, #34C759, #30D158); }
-        #card-c .avatar { background: linear-gradient(135deg, #FF9500, #FFCC00); }
+        /* 专属色彩定制 */
+        #card-jack .avatar { background: linear-gradient(135deg, #007AFF, #5AC8FA); }
+        #card-mae .avatar { background: linear-gradient(135deg, #34C759, #30D158); }
+        #card-aaliyah .avatar { background: linear-gradient(135deg, #AF52DE, #BF5AF2); }
     </style>
 </head>
 <body>
     <div class="title">Who is chatting?</div>
     <div class="user-grid">
-        <a href="./user-a/index.html" class="user-card" id="card-a">
+        <a href="./jack/index.html" class="user-card" id="card-jack">
+            <div class="avatar">J</div>
+            <div class="name">Jack</div>
+        </a>
+        <a href="./mae/index.html" class="user-card" id="card-mae">
+            <div class="avatar">M</div>
+            <div class="name">Mae</div>
+        </a>
+        <a href="./aaliyah/index.html" class="user-card" id="card-aaliyah">
             <div class="avatar">A</div>
-            <div class="name">User A</div>
-        </a>
-        <a href="./user-b/index.html" class="user-card" id="card-b">
-            <div class="avatar">B</div>
-            <div class="name">User B</div>
-        </a>
-        <a href="./user-c/index.html" class="user-card" id="card-c">
-            <div class="avatar">C</div>
-            <div class="name">User C</div>
+            <div class="name">Aaliyah</div>
         </a>
     </div>
 </body>
