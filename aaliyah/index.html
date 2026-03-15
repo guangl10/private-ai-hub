@@ -2,40 +2,47 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Private Workspace</title>
     <style>
-        /* 样式与之前完全相同，保持 Apple 磨砂极简风 */
         :root { --blur: 25px; --opacity: 0.75; --accent: #007AFF; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; }
-        body { margin: 0; height: 100vh; background: #000 url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564') no-repeat center center / cover; overflow: hidden; }
+        body { margin: 0; height: 100dvh; background: #000 url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564') no-repeat center center / cover; overflow: hidden; }
 
-        #glass-stage { height: 100vh; display: flex; flex-direction: column; backdrop-filter: blur(var(--blur)) saturate(180%); background: rgba(255, 255, 255, var(--opacity)); transition: background 0.3s ease; }
+        #glass-stage { height: 100%; display: flex; flex-direction: column; backdrop-filter: blur(var(--blur)) saturate(180%); background: rgba(255, 255, 255, var(--opacity)); transition: background 0.3s ease; }
         
-        header { padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.08); background: rgba(255,255,255,0.3); }
-        .nav-left { display: flex; align-items: center; gap: 15px; }
-        .back-btn { text-decoration: none; color: #333; font-weight: 500; font-size: 14px; background: rgba(0,0,0,0.05); padding: 6px 12px; border-radius: 12px; }
+        header { padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.08); background: rgba(255,255,255,0.3); }
+        .nav-left { display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: #333; font-weight: 500; font-size: 14px; background: rgba(0,0,0,0.05); padding: 6px 10px; border-radius: 12px; }
         .user-badge { font-weight: bold; font-size: 18px; color: var(--accent); }
 
         .pair-control { display: flex; background: rgba(0,0,0,0.06); padding: 4px; border-radius: 12px; }
-        .pair-control button { border: none; background: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; color: #555; transition: 0.2s; }
+        .pair-control button { border: none; background: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; color: #555; transition: 0.2s; }
         .pair-control button.active { background: white; color: var(--accent); font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
 
-        select { padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); outline: none; background: rgba(255,255,255,0.7); font-size: 13px; }
+        select { padding: 6px 8px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); outline: none; background: rgba(255,255,255,0.7); font-size: 12px; max-width: 140px; text-overflow: ellipsis; }
 
-        #chat-flow { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .bubble { max-width: 75%; padding: 12px 18px; border-radius: 20px; font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; }
+        #chat-flow { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 30px; }
+        .bubble { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
         .user { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 4px; }
         .ai { align-self: flex-start; background: rgba(255,255,255,0.85); border-bottom-left-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: #1d1d1f; }
+        .bubble img { max-width: 100%; border-radius: 10px; margin-top: 8px; }
 
-        footer { padding: 20px 25px; display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.2); border-top: 1px solid rgba(0,0,0,0.05); }
-        input[type="text"] { flex: 1; border: none; padding: 12px 20px; border-radius: 20px; background: rgba(255,255,255,0.8); box-shadow: inset 0 1px 4px rgba(0,0,0,0.05); outline: none; font-size: 14px; }
-        .btn { border: none; padding: 12px 20px; border-radius: 20px; cursor: pointer; font-weight: 500; font-size: 14px; transition: 0.2s; }
-        .btn-send { background: var(--accent); color: white; }
-        .btn-archive { background: #34C759; color: white; }
+        footer { padding: 12px 20px; padding-bottom: max(12px, env(safe-area-inset-bottom)); display: flex; gap: 8px; align-items: center; background: rgba(255,255,255,0.6); border-top: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(10px); }
+        
+        .icon-btn { border: none; background: rgba(0,0,0,0.05); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 16px; transition: 0.2s; flex-shrink: 0; }
+        .icon-btn:active { background: rgba(0,0,0,0.1); transform: scale(0.95); }
+        .icon-btn.recording { background: #FF3B30; color: white; animation: pulse 1.5s infinite; }
+        
+        input[type="text"] { flex: 1; border: none; padding: 10px 15px; border-radius: 20px; background: rgba(255,255,255,0.9); box-shadow: inset 0 1px 4px rgba(0,0,0,0.05); outline: none; font-size: 15px; min-width: 0; }
+        .btn-send { border: none; padding: 10px 16px; border-radius: 20px; cursor: pointer; font-weight: 500; font-size: 14px; background: var(--accent); color: white; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
+        
+        .tools-dock { position: fixed; top: 70px; right: 20px; padding: 12px; background: rgba(255,255,255,0.9); border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); font-size: 11px; color: #666; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
+        .tools-dock input[type="range"] { width: 100px; display: block; }
+        .btn-archive { border: none; background: #34C759; color: white; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; }
 
-        .slider-dock { position: fixed; top: 80px; right: 20px; padding: 12px; background: rgba(255,255,255,0.9); border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); font-size: 11px; color: #666; }
-        .slider-dock input { width: 100px; display: block; margin-top: 5px; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        input[type="file"] { display: none; }
     </style>
 </head>
 <body>
@@ -44,51 +51,42 @@
     <header>
         <div class="nav-left">
             <a href="../index.html" class="back-btn">← 大门</a>
-            <div class="user-badge" id="userIDDisplay">Loading...</div>
+            <div class="user-badge" id="userIDDisplay">Loading</div>
         </div>
 
         <div class="pair-control" id="modeSelector">
-            <button onclick="setMode(3, this)" class="active">闲聊(3对)</button>
-            <button onclick="setMode(5, this)">讨论(5对)</button>
-            <button onclick="setMode(10, this)">研讨(10对)</button>
-            <button onclick="setMode(30, this)">创造(30对)</button>
+            <button onclick="setMode(3, this)" class="active">闲聊(3)</button>
+            <button onclick="setMode(5, this)">讨论(5)</button>
+            <button onclick="setMode(10, this)">研讨(10)</button>
+            <button onclick="setMode(30, this)">创造(30)</button>
         </div>
 
-        <select id="modelPicker">
-            <option value="google/gemini-flash-1.5">Gemini 1.5 Flash ($0.075)</option>
-            <option value="google/gemini-2.5-flash">Gemini 2.5 Flash ($0.10)</option>
-            <option value="openai/gpt-4o-mini">GPT-4o-mini ($0.15)</option>
-            <option value="openai/gpt-5-mini">GPT-5 Mini ($0.25)</option>
-            <option value="anthropic/claude-3-haiku">Claude 3 Haiku ($0.25)</option>
-            <option value="anthropic/claude-3.5-haiku">Claude 3.5 Haiku ($0.80)</option>
-            <option value="meta-llama/llama-3.3-70b">Llama 3.3 70B ($0.10)</option>
-            <option value="microsoft/phi-4">Phi-4 ($0.10)</option>
-            <option value="perplexity/llama-3.1-sonar-8b">Sonar Pro ($1.00)</option>
-            <option value="google/gemini-pro-1.5">Gemini 1.5 Pro ($1.25)</option>
-            <option value="anthropic/claude-3.5-sonnet" selected>Claude 3.5 Sonnet (默认)</option>
-            <option value="openai/gpt-5.4">GPT-5.4 ($2.50)</option>
-            <option value="cohere/command-r7">Command R7 ($1.50)</option>
-            <option value="anthropic/claude-4.6-opus">Claude 4.6 Opus ($5.00)</option>
-            <option value="openai/gpt-5.4-pro">GPT-5.4 Pro ($30.00)</option>
-        </select>
+        <select id="modelPicker" onchange="handleModelChange()">
+            </select>
     </header>
 
     <div id="chat-flow"></div>
 
     <footer>
-        <input type="text" id="userInput" placeholder="在此输入想法，或记录今日进展...">
-        <button class="btn btn-send" onclick="sendMsg()">发送</button>
-        <button class="btn btn-archive" onclick="archiveMD()">归档 MD</button>
+        <button class="icon-btn" onclick="document.getElementById('imageInput').click()" title="上传图片">📷</button>
+        <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+        
+        <button class="icon-btn" id="voiceBtn" onclick="toggleVoice()" title="语音输入">🎤</button>
+        
+        <input type="text" id="userInput" placeholder="输入想法，或记录进展...">
+        <button class="btn-send" onclick="sendMsg()">发送</button>
     </footer>
 </div>
 
-<div class="slider-dock">
-    玻璃透明度
-    <input type="range" min="0.1" max="1" step="0.05" value="0.75" oninput="document.documentElement.style.setProperty('--opacity', this.value)">
+<div class="tools-dock">
+    <button class="btn-archive" onclick="archiveMD()">归档 MD</button>
+    <div>
+        透明度
+        <input type="range" min="0.1" max="1" step="0.05" value="0.75" oninput="document.documentElement.style.setProperty('--opacity', this.value)">
+    </div>
 </div>
 
 <script>
-    // 1. 基础身份与存储初始化
     const path = window.location.pathname.toLowerCase();
     let currentUser = 'Visitor';
     if (path.includes('jack')) currentUser = 'Jack';
@@ -99,108 +97,207 @@
     
     const ST_KEY = `MEM_${currentUser}_ST`;
     const LT_KEY = `MEM_${currentUser}_LT`;
-    const API_KEY_STORE = `OR_API_KEY`; // 本地存储 API Key 的名字
+    const API_KEY_STORE = `OR_API_KEY`;
+    const CUSTOM_MODELS_KEY = `CUSTOM_MODELS`;
 
     let currentLimit = 3;
     let shortTermLog = JSON.parse(localStorage.getItem(ST_KEY) || "[]");
+    let pendingImageBase64 = null;
 
-    // 页面加载问候
-    addBubble(`你好，${currentUser}！专属沙盒加载完毕。\n长期记忆 Markdown 已挂载，当前记忆模式：闲聊 (最近3对)。`, 'ai');
+    // 预设的 15 个精选模型
+    const baseModels = [
+        { id: "anthropic/claude-3.5-sonnet", name: "Claude 3.5 Sonnet (默认)" },
+        { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash ($0.10)" },
+        { id: "openai/gpt-5-mini", name: "GPT-5 Mini ($0.25)" },
+        { id: "anthropic/claude-3.5-haiku", name: "Claude 3.5 Haiku ($0.80)" },
+        { id: "microsoft/phi-4", name: "Phi-4 ($0.10)" },
+        { id: "meta-llama/llama-3.3-70b", name: "Llama 3.3 70B ($0.10)" },
+        { id: "google/gemini-flash-1.5", name: "Gemini 1.5 Flash ($0.075)" },
+        { id: "openai/gpt-4o-mini", name: "GPT-4o-mini ($0.15)" },
+        { id: "anthropic/claude-3-haiku", name: "Claude 3 Haiku ($0.25)" },
+        { id: "perplexity/llama-3.1-sonar-8b", name: "Sonar Pro ($1.00)" },
+        { id: "google/gemini-pro-1.5", name: "Gemini 1.5 Pro ($1.25)" },
+        { id: "openai/gpt-5.4", name: "GPT-5.4 ($2.50)" },
+        { id: "cohere/command-r7", name: "Command R7 ($1.50)" },
+        { id: "anthropic/claude-4.6-opus", name: "Claude 4.6 Opus ($5.00)" },
+        { id: "openai/gpt-5.4-pro", name: "GPT-5.4 Pro ($30.00)" }
+    ];
+
+    // 初始化模型列表
+    function renderModels() {
+        const picker = document.getElementById('modelPicker');
+        picker.innerHTML = '';
+        let customModels = JSON.parse(localStorage.getItem(CUSTOM_MODELS_KEY) || "[]");
+        
+        // 合并：预设模型 + 自定义模型 + 添加按钮
+        let allModels = [...baseModels, ...customModels, { id: "ADD_CUSTOM", name: "➕ 添加自定义模型..." }];
+
+        allModels.forEach(m => {
+            let opt = document.createElement('option');
+            opt.value = m.id;
+            opt.innerText = m.name;
+            picker.appendChild(opt);
+        });
+        
+        let savedModel = localStorage.getItem(`LAST_MODEL_${currentUser}`);
+        if(savedModel && allModels.some(m => m.id === savedModel)) {
+            picker.value = savedModel;
+        } else {
+            picker.value = "anthropic/claude-3.5-sonnet";
+        }
+    }
+
+    // 处理自定义模型添加逻辑
+    function handleModelChange() {
+        const picker = document.getElementById('modelPicker');
+        if (picker.value === "ADD_CUSTOM") {
+            let modelId = prompt("请输入 OpenRouter 模型 ID (例如: mistralai/mistral-large):");
+            if (modelId) {
+                let modelName = prompt("给这个模型起个显示名字:");
+                let customModels = JSON.parse(localStorage.getItem(CUSTOM_MODELS_KEY) || "[]");
+                customModels.push({ id: modelId.trim(), name: (modelName || modelId.trim()) + " (自定义)" });
+                localStorage.setItem(CUSTOM_MODELS_KEY, JSON.stringify(customModels));
+                renderModels();
+                picker.value = modelId.trim();
+            } else {
+                renderModels(); // 取消则重置回之前的状态
+            }
+        }
+        localStorage.setItem(`LAST_MODEL_${currentUser}`, picker.value);
+    }
+
+    renderModels();
+    addBubble(`你好，${currentUser}！\n已更新图片(📷)与语音(🎤)功能，且模型列表支持手动增加。`, 'ai');
     renderHistory();
 
-    // 2. 核心功能：获取与验证 API Key
     function getApiKey() {
         let key = localStorage.getItem(API_KEY_STORE);
         if (!key) {
-            key = prompt(`欢迎来到私人调度站，${currentUser}。\n请输入你的 OpenRouter API Key (仅保存在本地浏览器缓存中，不会上传)：`);
-            if (key) {
-                localStorage.setItem(API_KEY_STORE, key.trim());
-            } else {
-                alert("未输入 API Key，无法进行对话。刷新页面可重新输入。");
-            }
+            key = prompt(`欢迎，${currentUser}。\n请输入 OpenRouter API Key：`);
+            if (key) localStorage.setItem(API_KEY_STORE, key.trim());
         }
         return key;
     }
 
-    // 3. UI 交互逻辑
     function setMode(pairs, el) {
         currentLimit = pairs;
         document.querySelectorAll('.pair-control button').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
-        addBubble(`[系统] 记忆窗口已切换为最近 ${pairs} 对对话。`, 'ai');
     }
 
     function renderHistory() {
         const flow = document.getElementById('chat-flow');
+        // 保留开场的打招呼，追加历史记录
         const displayLog = shortTermLog.slice(-(currentLimit * 2));
-        displayLog.forEach(msg => {
-            const d = document.createElement('div');
-            d.className = `bubble ${msg.role}`;
-            d.innerText = msg.content;
-            flow.appendChild(d);
-        });
-        flow.scrollTop = flow.scrollHeight;
+        displayLog.forEach(msg => addBubble(msg.content, msg.role, msg.image));
     }
 
-    function addBubble(text, role) {
+    function addBubble(text, role, imageUrl = null) {
         const flow = document.getElementById('chat-flow');
         const d = document.createElement('div');
         d.className = `bubble ${role}`;
         d.innerText = text;
+        if (imageUrl) {
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            d.appendChild(img);
+        }
         flow.appendChild(d);
-        flow.scrollTop = flow.scrollHeight;
+        setTimeout(() => flow.scrollTop = flow.scrollHeight, 50);
+    }
+
+    // 语音识别逻辑 (iPad Safari 原生支持)
+    let recognition;
+    let isRecording = false;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.lang = 'zh-CN';
+        recognition.interimResults = false;
+        
+        recognition.onresult = (event) => {
+            document.getElementById('userInput').value += event.results[0][0].transcript;
+            toggleVoice(); 
+        };
+        recognition.onerror = () => { toggleVoice(); alert("语音识别未授权或出错。"); };
+        recognition.onend = () => { if(isRecording) toggleVoice(); };
+    }
+
+    function toggleVoice() {
+        const btn = document.getElementById('voiceBtn');
+        if (!recognition) return alert("浏览器不支持语音识别。");
+        if (!isRecording) {
+            recognition.start();
+            btn.classList.add('recording');
+            isRecording = true;
+        } else {
+            recognition.stop();
+            btn.classList.remove('recording');
+            isRecording = false;
+        }
+    }
+
+    // 图片转 Base64 逻辑
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            pendingImageBase64 = e.target.result;
+            document.getElementById('userInput').placeholder = "[图片已就绪] 请输入说明...";
+        };
+        reader.readAsDataURL(file);
     }
 
     document.getElementById('userInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMsg();
     });
 
-    // 4. 发送消息到 OpenRouter
+    // 核心发送逻辑
     async function sendMsg() {
         const input = document.getElementById('userInput');
         const text = input.value.trim();
         const apiKey = getApiKey();
-        if (!text || !apiKey) return;
+        if ((!text && !pendingImageBase64) || !apiKey) return;
 
-        // UI 响应
-        addBubble(text, 'user');
+        addBubble(text, 'user', pendingImageBase64);
         input.value = '';
+        input.placeholder = "输入想法，或记录进展...";
+        
         const sendBtn = document.querySelector('.btn-send');
-        sendBtn.innerText = "思考中...";
+        sendBtn.innerText = "...";
         sendBtn.disabled = true;
 
-        // 构建上下文：系统提示词 (含长期记忆) + 截断的短期记忆 + 当前提问
-        const longTermMD = localStorage.getItem(LT_KEY) || "暂无归档记忆。";
-        const systemPrompt = `你是 ${currentUser} 的私人 AI 助手。请使用温柔且专业的语调。解答问题时采用 First, Next, Best 的逻辑思维。以下是 ${currentUser} 的长期记忆归档，请在回复时作为背景参考：\n\n${longTermMD}`;
+        const longTermMD = localStorage.getItem(LT_KEY) || "暂无知识库。";
+        const systemPrompt = `你是 ${currentUser} 的私人 AI。参考以下归档：\n${longTermMD}`;
         
         let apiMessages = [{ role: "system", content: systemPrompt }];
         
-        // 追加截断后的短期记忆
         const contextLog = shortTermLog.slice(-(currentLimit * 2));
         contextLog.forEach(msg => {
-            apiMessages.push({ role: msg.role === 'ai' ? 'assistant' : 'user', content: msg.content });
+            let content = msg.content;
+            if (msg.image) {
+                content = [{ type: "text", text: msg.content || "图片" }, { type: "image_url", image_url: { url: msg.image } }];
+            }
+            apiMessages.push({ role: msg.role === 'ai' ? 'assistant' : 'user', content: content });
         });
         
-        // 追加本次提问
-        apiMessages.push({ role: "user", content: text });
-        shortTermLog.push({ role: 'user', content: text });
+        let currentContent = text;
+        if (pendingImageBase64) {
+            currentContent = [{ type: "text", text: text || "描述此图" }, { type: "image_url", image_url: { url: pendingImageBase64 } }];
+        }
+        apiMessages.push({ role: "user", content: currentContent });
+        
+        shortTermLog.push({ role: 'user', content: text, image: pendingImageBase64 });
+        pendingImageBase64 = null; 
 
         const selectedModel = document.getElementById('modelPicker').value;
 
         try {
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "HTTP-Referer": "https://github.com", // OpenRouter 必填
-                    "X-Title": "Private AI Hub",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: selectedModel,
-                    messages: apiMessages,
-                    temperature: 0.7
-                })
+                headers: { "Authorization": `Bearer ${apiKey}`, "HTTP-Referer": "https://github.com", "Content-Type": "application/json" },
+                body: JSON.stringify({ model: selectedModel, messages: apiMessages, temperature: 0.7 })
             });
 
             const data = await response.json();
@@ -212,70 +309,52 @@
             localStorage.setItem(ST_KEY, JSON.stringify(shortTermLog));
 
         } catch (error) {
-            addBubble(`[API 错误] 无法连接到大模型：${error.message}\n(如果是 401 错误，请在控制台输入 localStorage.removeItem('OR_API_KEY') 清除旧 Key 并刷新网页)`, 'ai');
-            shortTermLog.pop(); // 发送失败则撤销用户的提问记录
+            addBubble(`[API 错误] ${error.message}`, 'ai');
+            shortTermLog.pop();
         } finally {
             sendBtn.innerText = "发送";
             sendBtn.disabled = false;
         }
     }
 
-    // 5. 调用超廉价模型压缩短期记忆
+    // 手动压缩归档逻辑
     async function archiveMD() {
-        if(shortTermLog.length === 0) return alert("短期缓冲区为空，无需归档。");
+        if(shortTermLog.length === 0) return alert("短期为空，无需归档。");
         const apiKey = getApiKey();
         if(!apiKey) return;
 
-        const confirmGo = confirm(`将把 ${currentUser} 当前的短期对话压缩存入长期 Markdown，确认吗？`);
-        if(!confirmGo) return;
+        if(!confirm(`确认压缩短期对话存入长期 Markdown 吗？`)) return;
 
         const archiveBtn = document.querySelector('.btn-archive');
-        archiveBtn.innerText = "提炼中...";
-        archiveBtn.disabled = true;
-
-        const rawText = shortTermLog.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
+        archiveBtn.innerText = "归档中";
         
-        // 强制使用极其便宜的 Gemini Flash 或 GPT-4o-mini 来执行压缩任务，省钱
-        const compressPrompt = `你是一个专业的知识提取器。请将以下对话提炼为高密度的 Markdown 格式核心笔记。保留事实数据（如BOC考点、5年规划）、决策逻辑。删除一切无意义的寒暄和客套话。格式：### YYYY-MM-DD 归档\n- 核心点1\n- 核心点2\n\n对话原文：\n${rawText}`;
+        const rawText = shortTermLog.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
+        const compressPrompt = `提取以下对话为高密度 Markdown 核心笔记。保留事实和决策。删除客套话。格式：### YYYY-MM-DD 归档\n- 核心点\n\n对话：\n${rawText}`;
 
         try {
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "HTTP-Referer": "https://github.com",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: "google/gemini-2.5-flash", // 强制廉价模型
-                    messages: [{ role: "user", content: compressPrompt }],
-                    temperature: 0.2 // 低温度保证事实不产生幻觉
-                })
+                headers: { "Authorization": `Bearer ${apiKey}`, "HTTP-Referer": "https://github.com", "Content-Type": "application/json" },
+                body: JSON.stringify({ model: "google/gemini-2.5-flash", messages: [{ role: "user", content: compressPrompt }], temperature: 0.2 })
             });
 
             const data = await response.json();
-            if (data.error) throw new Error(data.error.message);
-
             const aiSummary = data.choices[0].message.content;
             
-            // 写入长期记忆
             let longTermMD = localStorage.getItem(LT_KEY) || `# ${currentUser} 的长期知识库\n`;
             longTermMD += `\n${aiSummary}\n`;
             localStorage.setItem(LT_KEY, longTermMD);
             
-            // 清空短期记忆
             shortTermLog = [];
             localStorage.setItem(ST_KEY, JSON.stringify(shortTermLog));
-            addBubble(`✅ 提炼完成！\n\n${aiSummary}\n\n[系统] ${currentUser} 的短期记忆已写入专属 Markdown 文档，缓冲区已清空。`, "ai");
+            addBubble(`✅ 提炼完成！\n\n${aiSummary}`, "ai");
 
         } catch (error) {
             alert(`归档失败: ${error.message}`);
         } finally {
             archiveBtn.innerText = "归档 MD";
-            archiveBtn.disabled = false;
         }
     }
 </script>
-
 </body>
 </html>
