@@ -17,6 +17,66 @@
         .bubble ul, .bubble ol { padding-left: 20px; margin: 8px 0; }
         .bubble li { margin-bottom: 4px; }
         .bubble h3 { font-size: 16px; margin: 10px 0 5px 0; border-left: 3px solid var(--accent); padding-left: 8px; }
+        /* AI 消息工具栏 */
+.msg-actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    opacity: 0; /* 默认隐藏，鼠标移上去或点击时显示 */
+    transition: opacity 0.3s;
+}
+.bubble.ai:hover .msg-actions, .bubble.ai:active .msg-actions {
+    opacity: 1;
+}
+.action-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: inherit;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.action-btn:hover { background: rgba(255, 255, 255, 0.3); }
+
+/* A4 沉浸阅读模式大屏 */
+.doc-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px); /* 毛玻璃背景 */
+    z-index: 9999;
+    display: flex; justify-content: center;
+    padding: 40px 20px;
+    overflow-y: auto;
+}
+.doc-paper {
+    background: #ffffff;
+    color: #333333; /* 纸质文档用深灰色更柔和 */
+    width: 100%; max-width: 800px; min-height: 100%;
+    padding: 60px 80px; /* 类似 Word 的页边距 */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    font-family: 'Georgia', 'Times New Roman', serif; /* 专业的学术衬线体 */
+    line-height: 1.8;
+    font-size: 16px;
+    border-radius: 4px;
+    position: relative;
+}
+.doc-paper table { width: 100%; border-collapse: collapse; margin: 20px 0; font-family: sans-serif; }
+.doc-paper th, .doc-paper td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+.doc-paper th { background-color: #f5f5f5; }
+
+/* 打印模式：完美切除网页多余元素，只印这张纸 */
+@media print {
+    body * { visibility: hidden; }
+    .doc-paper, .doc-paper * { visibility: visible; }
+    .doc-paper { 
+        position: absolute; left: 0; top: 0; 
+        padding: 0; box-shadow: none; width: 100%; max-width: 100%; 
+    }
+    .no-print { display: none !important; }
+}
+
 
 
         :root { --blur: 25px; --opacity: 0.75; --accent: #007AFF; }
@@ -206,15 +266,17 @@
         displayLog.forEach(msg => addBubble(msg.content, msg.role, msg.image));
     }
 
-    function addBubble(text, role, imageUrl = null) {
+        function addBubble(text, role, imageUrl = null) {
         const flow = document.getElementById('chat-flow');
         const d = document.createElement('div');
         d.className = `bubble ${role}`;
-        
-        // 核心 1：将 AI 返回的文本翻译成真正的 HTML 表格/列表。加 || "" 防止没打字只发图时报错
-        d.innerHTML = marked.parse(text || ""); 
-        
-        // 核心 2：确保图片完美加载在文字下方
+
+        // 核心 1：用一个专门的 contentDiv 装文字，这样后面加按钮时才不会把文字覆盖掉
+        const contentDiv = document.createElement('div');
+        contentDiv.innerHTML = marked.parse(text || "");
+        d.appendChild(contentDiv);
+
+        // 核心 2：完美保留你之前的图片 UI 排版（圆角、间距）
         if (imageUrl) {
             const img = document.createElement('img');
             img.src = imageUrl;
@@ -224,10 +286,42 @@
             img.style.borderRadius = "8px";
             d.appendChild(img);
         }
-        
+
+        // --- 新增逻辑：只有 AI 回复才生成专业工具栏 ---
+        if (role === 'ai') {
+            const actionBar = document.createElement('div');
+            actionBar.className = 'msg-actions';
+
+            // 📖 沉浸阅读 (A4 文档模式)
+            const readBtn = document.createElement('button');
+            readBtn.className = 'action-btn';
+            readBtn.innerText = '📖 沉浸阅读';
+            readBtn.onclick = () => openDocMode(contentDiv.innerHTML);
+
+            // 📋 纯净复制
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'action-btn';
+            copyBtn.innerText = '📋 复制 MD';
+            copyBtn.onclick = () => { 
+                navigator.clipboard.writeText(text); 
+                alert('✅ 已复制纯净的 Markdown 源码！'); 
+            };
+
+            // 📄 导出独立 MD 文件
+            const dlBtn = document.createElement('button');
+            dlBtn.className = 'action-btn';
+            dlBtn.innerText = '📄 导出 MD';
+            dlBtn.onclick = () => downloadSingleMD(text);
+
+            actionBar.appendChild(readBtn);
+            actionBar.appendChild(copyBtn);
+            actionBar.appendChild(dlBtn);
+            d.appendChild(actionBar);
+        }
+
         flow.appendChild(d);
-        
-        // 核心 3：使用平滑滚动，更符合 iPad 的丝滑交互
+
+        // 核心 3：完美保留你极其丝滑的 iPad 平滑滚动
         setTimeout(() => {
             flow.scrollTo({
                 top: flow.scrollHeight,
@@ -235,6 +329,52 @@
             });
         }, 50);
     }
+
+    // --- 附属功能区：文档模式与下载 (直接紧跟着贴在 addBubble 函数的下面) ---
+
+    function openDocMode(htmlContent) {
+        const overlay = document.createElement('div');
+        overlay.className = 'doc-modal-overlay';
+        overlay.onclick = (e) => { if(e.target === overlay) document.body.removeChild(overlay); };
+
+        const paper = document.createElement('div');
+        paper.className = 'doc-paper';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'action-btn no-print';
+        closeBtn.style.cssText = 'position: absolute; top: 20px; right: 20px; background: #ff3b30; color: white; border: none;';
+        closeBtn.innerText = '✖ 关闭';
+        closeBtn.onclick = () => document.body.removeChild(overlay);
+
+        const printBtn = document.createElement('button');
+        printBtn.className = 'action-btn no-print';
+        printBtn.style.cssText = 'position: absolute; top: 20px; right: 90px; background: #007aff; color: white; border: none;';
+        printBtn.innerText = '🖨️ 导出 PDF / 打印';
+        printBtn.onclick = () => window.print();
+
+        const content = document.createElement('div');
+        content.innerHTML = htmlContent;
+
+        paper.appendChild(closeBtn);
+        paper.appendChild(printBtn);
+        paper.appendChild(content);
+        overlay.appendChild(paper);
+        document.body.appendChild(overlay);
+    }
+
+    function downloadSingleMD(text) {
+        const today = new Date().toLocaleDateString().replace(/\//g, '-');
+        const blob = new Blob([text], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Jack_临床复盘_${today}.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
 
 
     // 语音识别逻辑 (iPad Safari 原生支持)
