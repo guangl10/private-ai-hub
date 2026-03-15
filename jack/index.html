@@ -17,61 +17,75 @@
         .bubble ul, .bubble ol { padding-left: 20px; margin: 8px 0; }
         .bubble li { margin-bottom: 4px; }
         .bubble h3 { font-size: 16px; margin: 10px 0 5px 0; border-left: 3px solid var(--accent); padding-left: 8px; }
-        /* AI 消息工具栏 */
-.msg-actions {
-    margin-top: 12px;
-    display: flex;
-    gap: 8px;
-    opacity: 0; /* 默认隐藏，鼠标移上去或点击时显示 */
-    transition: opacity 0.3s;
-}
-.bubble.ai:hover .msg-actions, .bubble.ai:active .msg-actions {
-    opacity: 1;
-}
-.action-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: inherit;
-    font-size: 12px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.action-btn:hover { background: rgba(255, 255, 255, 0.3); }
 
-/* A4 沉浸阅读模式大屏 */
+        /* --- 修复升级版：A4 沉浸阅读模式大屏 --- */
+
 .doc-modal-overlay {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px); /* 毛玻璃背景 */
+    backdrop-filter: blur(10px); /* 加强毛玻璃效果 */
     z-index: 9999;
-    display: flex; justify-content: center;
-    padding: 40px 20px;
+    /* 修复截断Bug：允许子元素撑开并从顶部开始对齐 */
+    display: flex; justify-content: center; align-items: flex-start;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* iPad 丝滑滚动支持 */
 }
+
 .doc-paper {
-    background: #ffffff;
-    color: #333333; /* 纸质文档用深灰色更柔和 */
-    width: 100%; max-width: 800px; min-height: 100%;
-    padding: 60px 80px; /* 类似 Word 的页边距 */
-    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-    font-family: 'Georgia', 'Times New Roman', serif; /* 专业的学术衬线体 */
-    line-height: 1.8;
-    font-size: 16px;
-    border-radius: 4px;
+    background: #ffffff !important;
+    color: #1a1a1a !important; /* 强制深灰近黑色字体 */
+    width: 90%; max-width: 820px; 
+    margin: 60px auto; /* 上下留出 60px 空间，不要贴边 */
+    min-height: calc(100vh - 120px); /* 修复截断Bug：哪怕字少，纸也有整张纸的高度 */
+    padding: 8% 10%; /* 模拟真实物理留白 */
+    box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+    border-radius: 4px; 
+    /* 采用 Apple 系统的原生衬线体，阅读感极佳 */
+    font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; 
+    line-height: 1.85;
+    font-size: 17px;
     position: relative;
 }
-.doc-paper table { width: 100%; border-collapse: collapse; margin: 20px 0; font-family: sans-serif; }
-.doc-paper th, .doc-paper td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-.doc-paper th { background-color: #f5f5f5; }
+
+/* 强制阻断原网页的颜色污染 */
+.doc-paper * { color: inherit; }
+.doc-paper p { margin-bottom: 1.2em; text-align: justify; }
+.doc-paper h1, .doc-paper h2, .doc-paper h3 { 
+    color: #000 !important; 
+    border-bottom: 1px solid #eaeaea; 
+    padding-bottom: 8px; 
+    margin-top: 1.8em; 
+    font-family: ui-sans-serif, system-ui, sans-serif; /* 标题用无衬线体更现代 */
+}
+
+/* 修复表格：专业医疗报告表格样式 */
+.doc-paper table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin: 2em 0; 
+    font-family: ui-sans-serif, system-ui, sans-serif; /* 表格使用无衬线体更清晰 */
+    font-size: 15px; 
+}
+.doc-paper th, .doc-paper td { 
+    border: 1px solid #d1d5db !important; /* 强制浅灰边框 */
+    padding: 14px 16px !important; 
+    background: #ffffff !important; /* 强制白底 */
+    color: #1a1a1a !important; /* 强制黑字 */
+    vertical-align: top;
+}
+.doc-paper th { 
+    background: #f9fafb !important; /* 表头极其淡的灰色 */
+    font-weight: 700; 
+    color: #111827 !important;
+}
+.doc-paper strong { color: #000 !important; font-weight: 700; }
 
 /* 打印模式：完美切除网页多余元素，只印这张纸 */
 @media print {
     body * { visibility: hidden; }
     .doc-paper, .doc-paper * { visibility: visible; }
     .doc-paper { 
-        position: absolute; left: 0; top: 0; 
+        position: absolute; left: 0; top: 0; margin: 0;
         padding: 0; box-shadow: none; width: 100%; max-width: 100%; 
     }
     .no-print { display: none !important; }
