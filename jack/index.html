@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Private Workspace</title>
     <style>
-        /* 样式与之前完全相同，保持 Apple 磨砂极简风 */
         :root { --blur: 25px; --opacity: 0.75; --accent: #007AFF; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; }
         body { margin: 0; height: 100vh; background: #000 url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564') no-repeat center center / cover; overflow: hidden; }
@@ -76,7 +75,7 @@
     <div id="chat-flow"></div>
 
     <footer>
-        <input type="text" id="userInput" placeholder="在此输入想法，或记录今日进展...">
+        <input type="text" id="userInput" placeholder="输入你想聊的内容，按回车或点击发送...">
         <button class="btn btn-send" onclick="sendMsg()">发送</button>
         <button class="btn btn-archive" onclick="archiveMD()">归档 MD</button>
     </footer>
@@ -88,7 +87,7 @@
 </div>
 
 <script>
-    // 1. 基础身份与存储初始化
+    // 智能识别：根据路径中的 jack / mae / aaliyah 自动配置身份
     const path = window.location.pathname.toLowerCase();
     let currentUser = 'Visitor';
     if (path.includes('jack')) currentUser = 'Jack';
@@ -99,30 +98,27 @@
     
     const ST_KEY = `MEM_${currentUser}_ST`;
     const LT_KEY = `MEM_${currentUser}_LT`;
-    const API_KEY_STORE = `OR_API_KEY`; // 本地存储 API Key 的名字
+    const API_KEY_STORE = `OR_API_KEY`;
 
     let currentLimit = 3;
     let shortTermLog = JSON.parse(localStorage.getItem(ST_KEY) || "[]");
 
-    // 页面加载问候
     addBubble(`你好，${currentUser}！专属沙盒加载完毕。\n长期记忆 Markdown 已挂载，当前记忆模式：闲聊 (最近3对)。`, 'ai');
     renderHistory();
 
-    // 2. 核心功能：获取与验证 API Key
     function getApiKey() {
         let key = localStorage.getItem(API_KEY_STORE);
         if (!key) {
-            key = prompt(`欢迎来到私人调度站，${currentUser}。\n请输入你的 OpenRouter API Key (仅保存在本地浏览器缓存中，不会上传)：`);
+            key = prompt(`欢迎来到私人调度站，${currentUser}。\n请输入你的 OpenRouter API Key (仅保存在本地，绝对安全)：`);
             if (key) {
                 localStorage.setItem(API_KEY_STORE, key.trim());
             } else {
-                alert("未输入 API Key，无法进行对话。刷新页面可重新输入。");
+                alert("未输入 API Key，无法发消息。重新点击发送可再次输入。");
             }
         }
         return key;
     }
 
-    // 3. UI 交互逻辑
     function setMode(pairs, el) {
         currentLimit = pairs;
         document.querySelectorAll('.pair-control button').forEach(b => b.classList.remove('active'));
@@ -155,33 +151,28 @@
         if (e.key === 'Enter') sendMsg();
     });
 
-    // 4. 发送消息到 OpenRouter
     async function sendMsg() {
         const input = document.getElementById('userInput');
         const text = input.value.trim();
         const apiKey = getApiKey();
         if (!text || !apiKey) return;
 
-        // UI 响应
         addBubble(text, 'user');
         input.value = '';
         const sendBtn = document.querySelector('.btn-send');
         sendBtn.innerText = "思考中...";
         sendBtn.disabled = true;
 
-        // 构建上下文：系统提示词 (含长期记忆) + 截断的短期记忆 + 当前提问
         const longTermMD = localStorage.getItem(LT_KEY) || "暂无归档记忆。";
-        const systemPrompt = `你是 ${currentUser} 的私人 AI 助手。请使用温柔且专业的语调。解答问题时采用 First, Next, Best 的逻辑思维。以下是 ${currentUser} 的长期记忆归档，请在回复时作为背景参考：\n\n${longTermMD}`;
+        const systemPrompt = `你是 ${currentUser} 的私人 AI 助手。请使用温柔且专业的语调解答问题。以下是 ${currentUser} 的长期记忆归档，请作为背景参考：\n\n${longTermMD}`;
         
         let apiMessages = [{ role: "system", content: systemPrompt }];
         
-        // 追加截断后的短期记忆
         const contextLog = shortTermLog.slice(-(currentLimit * 2));
         contextLog.forEach(msg => {
             apiMessages.push({ role: msg.role === 'ai' ? 'assistant' : 'user', content: msg.content });
         });
         
-        // 追加本次提问
         apiMessages.push({ role: "user", content: text });
         shortTermLog.push({ role: 'user', content: text });
 
@@ -192,7 +183,7 @@
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${apiKey}`,
-                    "HTTP-Referer": "https://github.com", // OpenRouter 必填
+                    "HTTP-Referer": "https://github.com/guangl10/private-ai-hub", 
                     "X-Title": "Private AI Hub",
                     "Content-Type": "application/json"
                 },
@@ -212,15 +203,14 @@
             localStorage.setItem(ST_KEY, JSON.stringify(shortTermLog));
 
         } catch (error) {
-            addBubble(`[API 错误] 无法连接到大模型：${error.message}\n(如果是 401 错误，请在控制台输入 localStorage.removeItem('OR_API_KEY') 清除旧 Key 并刷新网页)`, 'ai');
-            shortTermLog.pop(); // 发送失败则撤销用户的提问记录
+            addBubble(`[API 错误] 无法连接：${error.message}`, 'ai');
+            shortTermLog.pop();
         } finally {
             sendBtn.innerText = "发送";
             sendBtn.disabled = false;
         }
     }
 
-    // 5. 调用超廉价模型压缩短期记忆
     async function archiveMD() {
         if(shortTermLog.length === 0) return alert("短期缓冲区为空，无需归档。");
         const apiKey = getApiKey();
@@ -235,21 +225,20 @@
 
         const rawText = shortTermLog.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
         
-        // 强制使用极其便宜的 Gemini Flash 或 GPT-4o-mini 来执行压缩任务，省钱
-        const compressPrompt = `你是一个专业的知识提取器。请将以下对话提炼为高密度的 Markdown 格式核心笔记。保留事实数据（如BOC考点、5年规划）、决策逻辑。删除一切无意义的寒暄和客套话。格式：### YYYY-MM-DD 归档\n- 核心点1\n- 核心点2\n\n对话原文：\n${rawText}`;
+        const compressPrompt = `你是一个知识提取器。请将以下对话提炼为高密度的 Markdown 格式核心笔记。保留事实数据和决策逻辑。删除一切客套话。格式：### YYYY-MM-DD 归档\n- 核心点1\n- 核心点2\n\n对话原文：\n${rawText}`;
 
         try {
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${apiKey}`,
-                    "HTTP-Referer": "https://github.com",
+                    "HTTP-Referer": "https://github.com/guangl10/private-ai-hub",
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    model: "google/gemini-2.5-flash", // 强制廉价模型
+                    model: "google/gemini-2.5-flash",
                     messages: [{ role: "user", content: compressPrompt }],
-                    temperature: 0.2 // 低温度保证事实不产生幻觉
+                    temperature: 0.2
                 })
             });
 
@@ -258,15 +247,13 @@
 
             const aiSummary = data.choices[0].message.content;
             
-            // 写入长期记忆
             let longTermMD = localStorage.getItem(LT_KEY) || `# ${currentUser} 的长期知识库\n`;
             longTermMD += `\n${aiSummary}\n`;
             localStorage.setItem(LT_KEY, longTermMD);
             
-            // 清空短期记忆
             shortTermLog = [];
             localStorage.setItem(ST_KEY, JSON.stringify(shortTermLog));
-            addBubble(`✅ 提炼完成！\n\n${aiSummary}\n\n[系统] ${currentUser} 的短期记忆已写入专属 Markdown 文档，缓冲区已清空。`, "ai");
+            addBubble(`✅ 提炼完成！\n\n${aiSummary}\n\n[系统] 短期记忆已写入专属 Markdown 文档，缓冲区已清空。`, "ai");
 
         } catch (error) {
             alert(`归档失败: ${error.message}`);
@@ -276,6 +263,5 @@
         }
     }
 </script>
-
 </body>
 </html>
