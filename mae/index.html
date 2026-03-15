@@ -4,7 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Private Workspace</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <style>
+         /* ================= Markdown 样式增强 ================= */
+        .bubble p { margin: 0; }
+        .bubble p + p { margin-top: 10px; }
+        /* 表格设为块级元素并允许横向滚动，防止长表格撑破 iPad 屏幕 */
+        .bubble table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; background: rgba(255,255,255,0.4); border-radius: 8px; display: block; overflow-x: auto; white-space: nowrap; }
+        .bubble th, .bubble td { border: 1px solid rgba(0,0,0,0.1); padding: 8px; text-align: left; }
+        .bubble th { background: rgba(0,122,255,0.1); color: var(--accent); }
+        .bubble ul, .bubble ol { padding-left: 20px; margin: 8px 0; }
+        .bubble li { margin-bottom: 4px; }
+        .bubble h3 { font-size: 16px; margin: 10px 0 5px 0; border-left: 3px solid var(--accent); padding-left: 8px; }
+
         :root { --blur: 25px; --opacity: 0.75; --accent: #007AFF; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; }
         body { margin: 0; height: 100dvh; background: #000 url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564') no-repeat center center / cover; overflow: hidden; }
@@ -192,19 +205,36 @@
         displayLog.forEach(msg => addBubble(msg.content, msg.role, msg.image));
     }
 
-    function addBubble(text, role, imageUrl = null) {
+        function addBubble(text, role, imageUrl = null) {
         const flow = document.getElementById('chat-flow');
         const d = document.createElement('div');
         d.className = `bubble ${role}`;
-        d.innerText = text;
+        
+        // 核心 1：将 AI 返回的文本翻译成真正的 HTML 表格/列表。加 || "" 防止没打字只发图时报错
+        d.innerHTML = marked.parse(text || ""); 
+        
+        // 核心 2：确保图片完美加载在文字下方
         if (imageUrl) {
             const img = document.createElement('img');
             img.src = imageUrl;
+            img.style.display = "block";
+            img.style.marginTop = "10px";
+            img.style.maxWidth = "100%";
+            img.style.borderRadius = "8px";
             d.appendChild(img);
         }
+        
         flow.appendChild(d);
-        setTimeout(() => flow.scrollTop = flow.scrollHeight, 50);
+        
+        // 核心 3：使用平滑滚动，更符合 iPad 的丝滑交互
+        setTimeout(() => {
+            flow.scrollTo({
+                top: flow.scrollHeight,
+                behavior: 'smooth' 
+            });
+        }, 50);
     }
+
 
     // 语音识别逻辑 (iPad Safari 原生支持)
     let recognition;
