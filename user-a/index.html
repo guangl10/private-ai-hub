@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Workspace</title>
+    <style>
+        :root { --blur: 25px; --opacity: 0.75; --accent: #007AFF; }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; }
+        body { margin: 0; height: 100vh; background: #000 url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564') no-repeat center center / cover; overflow: hidden; }
+
+        #glass-stage { height: 100vh; display: flex; flex-direction: column; backdrop-filter: blur(var(--blur)) saturate(180%); background: rgba(255, 255, 255, var(--opacity)); transition: background 0.3s ease; }
+        
+        header { padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.08); background: rgba(255,255,255,0.3); }
+        .nav-left { display: flex; align-items: center; gap: 15px; }
+        .back-btn { text-decoration: none; color: #333; font-weight: 500; font-size: 14px; background: rgba(0,0,0,0.05); padding: 6px 12px; border-radius: 12px; }
+        .user-badge { font-weight: bold; font-size: 18px; color: var(--accent); }
+
+        /* 记忆深度药丸 */
+        .pair-control { display: flex; background: rgba(0,0,0,0.06); padding: 4px; border-radius: 12px; }
+        .pair-control button { border: none; background: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; color: #555; transition: 0.2s; }
+        .pair-control button.active { background: white; color: var(--accent); font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+
+        select { padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); outline: none; background: rgba(255,255,255,0.7); font-size: 13px; }
+
+        #chat-flow { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .bubble { max-width: 75%; padding: 12px 18px; border-radius: 20px; font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; }
+        .user { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 4px; }
+        .ai { align-self: flex-start; background: rgba(255,255,255,0.85); border-bottom-left-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: #1d1d1f; }
+
+        footer { padding: 20px 25px; display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.2); border-top: 1px solid rgba(0,0,0,0.05); }
+        input[type="text"] { flex: 1; border: none; padding: 12px 20px; border-radius: 20px; background: rgba(255,255,255,0.8); box-shadow: inset 0 1px 4px rgba(0,0,0,0.05); outline: none; font-size: 14px; }
+        .btn { border: none; padding: 12px 20px; border-radius: 20px; cursor: pointer; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .btn-send { background: var(--accent); color: white; }
+        .btn-archive { background: #34C759; color: white; }
+
+        .slider-dock { position: fixed; top: 80px; right: 20px; padding: 12px; background: rgba(255,255,255,0.9); border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); font-size: 11px; color: #666; }
+        .slider-dock input { width: 100px; display: block; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div id="glass-stage">
+    <header>
+        <div class="nav-left">
+            <a href="../index.html" class="back-btn">← 分诊页</a>
+            <div class="user-badge" id="userIDDisplay">User ?</div>
+        </div>
+
+        <div class="pair-control" id="modeSelector">
+            <button onclick="setMode(3, this)" class="active">闲聊(3对)</button>
+            <button onclick="setMode(5, this)">讨论(5对)</button>
+            <button onclick="setMode(10, this)">研讨(10对)</button>
+            <button onclick="setMode(30, this)">创造(30对)</button>
+        </div>
+
+        <select id="modelPicker">
+            <option value="google/gemini-flash-1.5">Gemini 1.5 Flash ($0.075)</option>
+            <option value="google/gemini-2.5-flash">Gemini 2.5 Flash ($0.10)</option>
+            <option value="openai/gpt-4o-mini">GPT-4o-mini ($0.15)</option>
+            <option value="openai/gpt-5-mini">GPT-5 Mini ($0.25)</option>
+            <option value="anthropic/claude-3-haiku">Claude 3 Haiku ($0.25)</option>
+            <option value="anthropic/claude-3.5-haiku">Claude 3.5 Haiku ($0.80)</option>
+            <option value="meta-llama/llama-3.3-70b">Llama 3.3 70B ($0.10)</option>
+            <option value="microsoft/phi-4">Phi-4 ($0.10)</option>
+            <option value="perplexity/llama-3.1-sonar-8b">Sonar Pro ($1.00)</option>
+            <option value="google/gemini-pro-1.5">Gemini 1.5 Pro ($1.25)</option>
+            <option value="anthropic/claude-3.5-sonnet" selected>Claude 3.5 Sonnet (默认旗舰)</option>
+            <option value="openai/gpt-5.4">GPT-5.4 ($2.50)</option>
+            <option value="cohere/command-r7">Command R7 ($1.50)</option>
+            <option value="anthropic/claude-4.6-opus">Claude 4.6 Opus ($5.00)</option>
+            <option value="openai/gpt-5.4-pro">GPT-5.4 Pro ($30.00)</option>
+        </select>
+    </header>
+
+    <div id="chat-flow"></div>
+
+    <footer>
+        <input type="text" id="userInput" placeholder="在此输入你的想法，或记录今日进展...">
+        <button class="btn btn-send" onclick="sendMsg()">发送</button>
+        <button class="btn btn-archive" onclick="archiveMD()">归档 MD</button>
+    </footer>
+</div>
+
+<div class="slider-dock">
+    透明度 (Glass)
+    <input type="range" min="0.1" max="1" step="0.05" value="0.75" oninput="document.documentElement.style.setProperty('--opacity', this.value)">
+</div>
+
+<script>
+    // 1. 自动识别用户身份并初始化隔离存储
+    const path = window.location.pathname;
+    const currentUser = path.includes('user-a') ? 'A' : path.includes('user-b') ? 'B' : path.includes('user-c') ? 'C' : 'Test';
+    document.getElementById('userIDDisplay').innerText = `User ${currentUser}`;
+    
+    const ST_KEY = `MEM_${currentUser}_ST`; // 短期记忆 Key
+    const LT_KEY = `MEM_${currentUser}_LT`; // 长期归档 Markdown Key
+
+    let currentLimit = 3;
+    let shortTermLog = JSON.parse(localStorage.getItem(ST_KEY) || "[]");
+
+    // 初始化界面
+    addBubble(`已成功加载 User ${currentUser} 的专属沙盒。\n长期记忆 Markdown 已在后台就绪，当前记忆模式：闲聊 (最近3对对话)。`, 'ai');
+    renderHistory();
+
+    function setMode(pairs, el) {
+        currentLimit = pairs;
+        document.querySelectorAll('.pair-control button').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        addBubble(`[系统] 窗口已截断。接下来的分析将基于最近 ${pairs} 对对话。`, 'ai');
+    }
+
+    function renderHistory() {
+        const flow = document.getElementById('chat-flow');
+        const displayLog = shortTermLog.slice(-(currentLimit * 2));
+        displayLog.forEach(msg => {
+            const d = document.createElement('div');
+            d.className = `bubble ${msg.role}`;
+            d.innerText = msg.content;
+            flow.appendChild(d);
+        });
+        flow.scrollTop = flow.scrollHeight;
+    }
+
+    function addBubble(text, role) {
+        const flow = document.getElementById('chat-flow');
+        const d = document.createElement('div');
+        d.className = `bubble ${role}`;
+        d.innerText = text;
+        flow.appendChild(d);
+        flow.scrollTop = flow.scrollHeight;
+    }
+
+    document.getElementById('userInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMsg();
+    });
+
+    async function sendMsg() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        addBubble(text, 'user');
+        input.value = '';
+
+        shortTermLog.push({ role: 'user', content: text });
+
+        // API 占位符
+        setTimeout(() => {
+            const aiText = `[AI 回复占位] 收到消息。API 接入后将调用选定模型并携带记忆进行回复。`;
+            addBubble(aiText, 'ai');
+            shortTermLog.push({ role: 'ai', content: aiText });
+            localStorage.setItem(ST_KEY, JSON.stringify(shortTermLog));
+        }, 600);
+    }
+
+    async function archiveMD() {
+        if(shortTermLog.length === 0) return alert("短期缓冲区为空，无需归档。");
+        
+        const confirmGo = confirm("将把当前的短期对话压缩为核心知识点，存入长期 Markdown 文档并清空短期记录。确认吗？");
+        if(!confirmGo) return;
+
+        setTimeout(() => {
+            const aiSummary = `### ${new Date().toLocaleDateString()} 自动归档\n- 执行了记忆脱水压缩。\n- 清理了冗余信息。`;
+            let longTermMD = localStorage.getItem(LT_KEY) || "# 长期知识库\n";
+            longTermMD += `\n${aiSummary}\n`;
+            localStorage.setItem(LT_KEY, longTermMD);
+            
+            shortTermLog = [];
+            localStorage.setItem(ST_KEY, JSON.stringify(shortTermLog));
+            addBubble("✅ 知识提炼完成。短期记忆已写入长期 Markdown 文档。缓冲区已重置。", "ai");
+        }, 800);
+    }
+</script>
+</body>
+</html>
