@@ -561,9 +561,7 @@
                 <span class="header-mode-icon">🎓</span>
                 <span class="header-mode-name">学术模式</span>
             </div>
-            <div class="header-right">
-                <button class="tts-btn" id="ttsToggle" onclick="toggleTTS()" title="AI语音回复">🔊</button>
-            </div>
+            <div class="header-right"></div>
         </header>
 
         <div id="chat-flow"></div>
@@ -628,7 +626,6 @@ let shortTermLog = JSON.parse(localStorage.getItem(ST_KEY) || '[]');
 let pendingImageBase64 = null;
 let allModels = [];
 let selectedModelId = localStorage.getItem(LAST_MODEL_KEY) || 'anthropic/claude-sonnet-4-5';
-let ttsEnabled = false;
 let sessionTokens = 0;
 let totalTokens = parseInt(localStorage.getItem(TOK_TOTAL_KEY) || '0');
 let isStreaming = false;
@@ -1018,8 +1015,7 @@ async function sendMsg() {
             updateTokenDisplay(est);
         }
 
-        // TTS
-        if (ttsEnabled && accumulated) speakText(accumulated);
+        // TTS disabled
 
     } catch(error) {
         contentDiv.classList.remove('streaming-cursor');
@@ -1150,21 +1146,6 @@ function openDocView(btn) {
     overlay.appendChild(paper);
     document.body.appendChild(overlay);
     overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-}
-
-// ─────────────────────────────────────────────
-// TTS
-// ─────────────────────────────────────────────
-function toggleTTS() {
-    ttsEnabled = !ttsEnabled;
-    document.getElementById('ttsToggle').classList.toggle('active', ttsEnabled);
-}
-function speakText(text) {
-    const clean = text.replace(/[#*`>]/g, '').replace(/\n+/g, ' ').slice(0, 500);
-    const utt = new SpeechSynthesisUtterance(clean);
-    utt.lang = 'zh-CN'; utt.rate = 1.05;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utt);
 }
 
 // ─────────────────────────────────────────────
